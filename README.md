@@ -1,3 +1,11 @@
-# wake-on-dsm
+# wake-on-dsm custom
 
-Send `Wake On LAN` with Synology NAS(DSM).  
+forked by https://github.com/yashikota/wake-on-dsm
+
+サーバからWakeOnLANをするためのphp製アプリ
+
+php8.0, Apache2.4で動作
+
+認証情報などはないので、VPNなどで同LAN内からのみの使用を想定
+
+オリジナル版をカスタムし、送信先をWeb上で設定、保存が可能

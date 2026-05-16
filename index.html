@@ -7,125 +7,699 @@
     <title>Wake On DSM</title>
 
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        :root {
+            --bg: #050505;
+            --panel: #111111;
+            --panel-border: #242424;
+            --text: #f3f3f3;
+            --muted: #a1a1a1;
+            --accent: #7df9a7;
+            --accent-hover: #5fe08b;
+            --danger: #ff6b6b;
         }
 
-        h1 {
-            color: #333;
-            font-size: 2rem;
-            margin-bottom: 1rem;
-            text-align: center;
-        }
-
-        form {
-            background-color: #fff;
-            padding: 1.5rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 400px;
+        * {
             box-sizing: border-box;
         }
 
-        label {
-            font-size: 1rem;
-            color: #555;
-            display: block;
-            margin-bottom: 0.5rem;
+        body {
+            position: relative;
+            overflow: hidden;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px;
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            background:
+                radial-gradient(circle at top, rgba(86, 160, 255, 0.14), transparent 28%),
+                linear-gradient(180deg, #0d0d0d 0%, #050505 100%);
+            color: var(--text);
         }
 
-        select,
-        input[type="text"],
-        button {
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: auto;
+            width: 42vw;
+            height: 42vw;
+            min-width: 280px;
+            min-height: 280px;
+            border-radius: 50%;
+            pointer-events: none;
+            filter: blur(72px);
+            opacity: 0.34;
+            z-index: 0;
+            background: radial-gradient(circle, rgba(73, 135, 255, 0.42) 0%, rgba(73, 135, 255, 0.16) 38%, rgba(73, 135, 255, 0) 72%);
+            animation: drift 18s ease-in-out infinite;
+        }
+
+        body::before {
+            top: 8%;
+            left: 6%;
+        }
+
+        body::after {
+            right: 4%;
+            bottom: 10%;
+            width: 36vw;
+            height: 36vw;
+            background: radial-gradient(circle, rgba(44, 109, 255, 0.42) 0%, rgba(44, 109, 255, 0.16) 40%, rgba(44, 109, 255, 0) 74%);
+            animation-duration: 24s;
+            animation-direction: reverse;
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+
+            33% {
+                transform: translate3d(6vw, 3vh, 0) scale(1.08);
+            }
+
+            66% {
+                transform: translate3d(-4vw, 5vh, 0) scale(0.94);
+            }
+
+            100% {
+                transform: translate3d(0, 0, 0) scale(1);
+            }
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: min(920px, 100%);
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        h1 {
+            margin: 0;
+            text-align: center;
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .panel {
+            background: rgba(13, 13, 13, 0.84);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+            backdrop-filter: blur(10px);
+        }
+
+        .panel-title {
+            margin: 0;
+            font-size: 0.95rem;
+            color: var(--muted);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .add-form {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        input {
             width: 100%;
-            padding: 0.75rem;
-            font-size: 1rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        select:focus,
-        input[type="text"]:focus,
-        button:focus {
-            border-color: #4caf50;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 0;
+            background: transparent;
+            color: var(--text);
+            font-size: 0.95rem;
             outline: none;
         }
 
-        button {
-            background-color: #4caf50;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
+        input:focus {
+            box-shadow: inset 0 -1px 0 rgba(86, 160, 255, 0.8);
+        }
+
+        .list {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 30% 30% 40%;
+            align-items: center;
+            gap: 16px;
+            background: rgba(17, 17, 17, 0.92);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: 18px 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.32);
+        }
+
+        .row.header {
+            background: transparent;
             border: none;
+            box-shadow: none;
+            padding: 0 20px 4px;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+        }
+
+        .label.padded {
+            padding-left: 1rem;
+        }
+
+        .label.center {
+            text-align: center;
+        }
+
+        .name {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+
+        .mac {
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            color: #d7d7d7;
+        }
+
+        .cell-text {
+            padding: 14px 16px;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .actions button {
+            flex: 0.4 1 0;
+            min-width: 0;
+            padding-left: 2px;
+            padding-right: 2px;
+        }
+
+        button {
+            padding: 12px 18px;
+            border: none;
+            border-radius: 999px;
+            background: var(--accent);
+            color: #041109;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.18s ease, background-color 0.18s ease, box-shadow 0.18s ease;
+            box-shadow: 0 10px 24px rgba(125, 249, 167, 0.22);
         }
 
         button:hover {
-            background-color: #45a049;
+            background: var(--accent-hover);
+            transform: translateY(-1px);
         }
 
-        @media (max-width: 600px) {
-            h1 {
-                font-size: 1.75rem;
+        button.secondary {
+            background: rgba(86, 160, 255, 0.16);
+            color: #d8e8ff;
+            box-shadow: none;
+        }
+
+        button.secondary:hover {
+            background: rgba(86, 160, 255, 0.24);
+        }
+
+        button.danger {
+            background: transparent;
+            color: #ffd5d5;
+            box-shadow: none;
+            border: 1px solid rgba(255, 107, 107, 0.28);
+        }
+
+        button.danger:hover {
+            background: rgba(255, 107, 107, 0.12);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: wait;
+            transform: none;
+        }
+
+        .ghost-button {
+            background: transparent;
+            color: #d8e8ff;
+            box-shadow: none;
+            border: 1px solid rgba(86, 160, 255, 0.28);
+        }
+
+        .ghost-button:hover {
+            background: rgba(86, 160, 255, 0.12);
+        }
+
+        .message {
+            margin-top: 18px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error {
+            color: var(--danger);
+        }
+
+        .snackbar {
+            position: fixed;
+            left: 50%;
+            bottom: 28px;
+            transform: translate(-50%, 24px);
+            min-width: min(560px, calc(100vw - 32px));
+            max-width: calc(100vw - 32px);
+            padding: 16px 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(12, 18, 32, 0.92);
+            color: var(--text);
+            box-shadow: 0 18px 48px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.24s ease, transform 0.24s ease;
+            z-index: 10;
+            backdrop-filter: blur(12px);
+        }
+
+        .snackbar.visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .snackbar.success {
+            border-color: rgba(125, 249, 167, 0.28);
+        }
+
+        .snackbar.error {
+            border-color: rgba(255, 107, 107, 0.28);
+            color: #ffd5d5;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            z-index: 9;
+        }
+
+        .modal.open {
+            display: flex;
+        }
+
+        .modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.56);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal-card {
+            position: relative;
+            z-index: 1;
+            width: min(520px, 100%);
+            background: rgba(13, 13, 13, 0.96);
+            border: 1px solid var(--panel-border);
+            border-radius: 22px;
+            padding: 22px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+
+        @media (max-width: 720px) {
+            .row,
+            .row.header {
+                grid-template-columns: 1fr;
+                gap: 10px;
             }
 
-            form {
-                padding: 1.25rem;
+            .row.header {
+                display: none;
             }
 
-            label {
-                font-size: 0.9rem;
+            .actions {
+                justify-content: flex-start;
             }
 
-            select,
-            input[type="text"],
-            button {
-                font-size: 0.9rem;
-                padding: 0.65rem;
+            .panel-header,
+            .modal-actions {
+                flex-direction: column;
+                align-items: stretch;
             }
         }
     </style>
 
     <script>
-        function toggleMacInput() {
-            const macSelect = document.getElementById('macSelect');
-            const customMacField = document.getElementById('customMacField');
+        let snackbarTimer;
+        let devices = [];
+        async function loadDevices() {
+            const message = document.getElementById('message');
 
-            if (macSelect.value === 'other') {
-                customMacField.style.display = 'block';
-                document.getElementById('mac').required = true;
-            } else {
-                customMacField.style.display = 'none';
-                document.getElementById('mac').required = false;
+            try {
+                const response = await fetch('config.php', { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error('Failed to load configuration');
+                }
+
+                const payload = await response.json();
+                devices = Array.isArray(payload.devices) ? payload.devices : [];
+                renderDevices();
+
+                if (devices.length === 0) {
+                    message.textContent = 'No devices configured.';
+                    return;
+                }
+
+                message.textContent = '';
+            } catch (error) {
+                message.textContent = 'Failed to load configured devices.';
+                message.classList.add('error');
             }
         }
+
+        function renderDevices() {
+            const deviceList = document.getElementById('deviceList');
+            const message = document.getElementById('message');
+
+            deviceList.innerHTML = '';
+            message.classList.remove('error');
+
+            if (devices.length === 0) {
+                message.textContent = 'No devices configured.';
+                return;
+            }
+
+            const header = document.createElement('div');
+            header.className = 'row header';
+            header.innerHTML = `
+                <div class="label padded">PC Name</div>
+                <div class="label padded">MAC Address</div>
+                <div class="label center">Action</div>
+            `;
+            deviceList.appendChild(header);
+
+            for (const device of devices) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                row.innerHTML = `
+                    <div class="cell-text name">${escapeHtml(device.name)}</div>
+                    <div class="cell-text mac">${escapeHtml(device.mac)}</div>
+                    <div class="actions">
+                        <button type="button" class="wake-button" data-mac="${escapeHtml(device.mac)}" data-broadcast="${escapeHtml(device.broadcast || '255.255.255.255')}">Wake</button>
+                        <button type="button" class="danger delete-button" data-mac="${escapeHtml(device.mac)}">Delete</button>
+                    </div>
+                `;
+                deviceList.appendChild(row);
+            }
+
+            bindRowActions();
+        }
+
+        function bindRowActions() {
+            const wakeButtons = document.querySelectorAll('.wake-button');
+            const deleteButtons = document.querySelectorAll('.delete-button');
+
+            for (const button of wakeButtons) {
+                button.addEventListener('click', async () => {
+                    const mac = button.dataset.mac;
+                    const broadcast = button.dataset.broadcast || '255.255.255.255';
+                    button.disabled = true;
+                    button.textContent = 'Waking...';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('macSelect', mac);
+                        formData.append('broadcast', broadcast);
+                        const wakeUrl = new URL('wake.php', window.location.href).toString();
+
+                        console.log('Wake request target', {
+                            url: wakeUrl,
+                            mac,
+                            broadcast
+                        });
+
+                        const response = await fetch(wakeUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await parseJsonResponse(response, 'wake.php');
+                        showSnackbar(result.message, result.success ? 'success' : 'error');
+                    } catch (error) {
+                        console.error('Wake request failed', error);
+                        showSnackbar('Failed to send wake request.', 'error');
+                    }
+                    finally {
+                        button.disabled = false;
+                        button.textContent = 'Wake';
+                    }
+                });
+            }
+
+            for (const button of deleteButtons) {
+                button.addEventListener('click', async () => {
+                    const mac = button.dataset.mac;
+                    const confirmed = window.confirm(`Delete device ${mac}?`);
+
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    button.disabled = true;
+                    button.textContent = 'Deleting...';
+
+                    try {
+                        const formData = new FormData();
+                        formData.append('action', 'delete');
+                        formData.append('mac', mac);
+                        const configUrl = new URL('config.php', window.location.href).toString();
+
+                        console.log('Delete request target', {
+                            url: configUrl,
+                            mac
+                        });
+
+                        const response = await fetch(configUrl, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await parseJsonResponse(response, 'config.php delete');
+                        if (result.success) {
+                            devices = result.devices;
+                            renderDevices();
+                        }
+                        showSnackbar(result.message, result.success ? 'success' : 'error');
+                    } catch (error) {
+                        console.error('Delete request failed', error);
+                        showSnackbar('Failed to delete device.', 'error');
+                    } finally {
+                        button.disabled = false;
+                        button.textContent = 'Delete';
+                    }
+                });
+            }
+        }
+
+        function showSnackbar(message, type) {
+            const snackbar = document.getElementById('snackbar');
+            snackbar.textContent = message;
+            snackbar.className = `snackbar visible ${type}`;
+
+            window.clearTimeout(snackbarTimer);
+            snackbarTimer = window.setTimeout(() => {
+                snackbar.className = 'snackbar';
+            }, 3200);
+        }
+
+        async function parseJsonResponse(response, context) {
+            const rawText = await response.text();
+            let payload = null;
+
+            try {
+                payload = JSON.parse(rawText);
+            } catch (error) {
+                console.error(`${context} returned non-JSON response`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: rawText
+                });
+                throw new Error(`${context} returned non-JSON response`);
+            }
+
+            if (!response.ok) {
+                console.error(`${context} returned error response`, {
+                    status: response.status,
+                    statusText: response.statusText,
+                    body: payload
+                });
+            }
+
+            return payload;
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function bindAddForm() {
+            const form = document.getElementById('addDeviceForm');
+            const openButton = document.getElementById('openAddDialog');
+            const closeButton = document.getElementById('closeAddDialog');
+            const modal = document.getElementById('addDeviceModal');
+            const backdrop = modal.querySelector('.modal-backdrop');
+            const modalTitle = document.getElementById('deviceModalTitle');
+            const nameInput = document.getElementById('newDeviceName');
+            const macInput = document.getElementById('newDeviceMac');
+            const broadcastInput = document.getElementById('newDeviceBroadcast');
+
+            function openModal() {
+                modal.classList.add('open');
+                nameInput.focus();
+            }
+
+            function closeModal() {
+                modal.classList.remove('open');
+                form.reset();
+            };
+
+            openButton.addEventListener('click', openModal);
+            closeButton.addEventListener('click', closeModal);
+            backdrop.addEventListener('click', closeModal);
+
+            window.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && modal.classList.contains('open')) {
+                    closeModal();
+                }
+            });
+
+            form.addEventListener('submit', async (event) => {
+                event.preventDefault();
+
+                const button = document.getElementById('submitAddDevice');
+
+                button.disabled = true;
+                button.textContent = 'Adding...';
+
+                try {
+                    const configUrl = new URL('config.php', window.location.href).toString();
+
+                    console.log('Add request target', {
+                        url: configUrl,
+                        name: nameInput.value,
+                        mac: macInput.value,
+                        broadcast: broadcastInput.value
+                    });
+
+                    const response = await fetch(configUrl, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            name: nameInput.value,
+                            mac: macInput.value,
+                            broadcast: broadcastInput.value
+                        })
+                    });
+
+                    const result = await parseJsonResponse(response, 'config.php add');
+                    if (result.success) {
+                        devices = result.devices;
+                        renderDevices();
+                        closeModal();
+                    }
+                    showSnackbar(result.message, result.success ? 'success' : 'error');
+                } catch (error) {
+                    console.error('Add request failed', error);
+                    showSnackbar('Failed to add device.', 'error');
+                } finally {
+                    button.disabled = false;
+                    button.textContent = 'Add';
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            bindAddForm();
+            loadDevices();
+        });
     </script>
 </head>
 
 <body>
-    <form action="wake.php" method="post">
-        <label for="macSelect">Select MAC Address</label>
-        <select name="macSelect" id="macSelect" onchange="toggleMacInput()" required>
-            <option value="">Choose a MAC Address</option>
-            <option value="AB:CD:EF:12:34:56">example (AB:CD:EF:12:34:56)</option>
-            <option value="other">Other</option>
-        </select>
-
-        <div id="customMacField" style="display: none;">
-            <label for="mac">Enter Custom MAC Address</label>
-            <input type="text" name="mac" id="mac" placeholder="e.g., AB:CD:EF:12:34:56">
+    <main class="shell">
+        <div class="stack">
+            <section class="panel">
+                <div class="panel-header">
+                    <button id="openAddDialog" type="button" class="ghost-button">Add</button>
+                </div>
+                <section id="deviceList" class="list"></section>
+                <p id="message" class="message"></p>
+            </section>
         </div>
-
-        <button type="submit">Wake</button>
-    </form>
+    </main>
+        <div id="addDeviceModal" class="modal" aria-hidden="true">
+        <div class="modal-backdrop"></div>
+        <div class="modal-card">
+            <div class="panel-header">
+                <h2 id="deviceModalTitle" class="panel-title">Add Device</h2>
+                <button id="closeAddDialog" type="button" class="secondary">Close</button>
+            </div>
+            <form id="addDeviceForm" class="add-form">
+                <input id="newDeviceName" type="text" placeholder="PC Name" required>
+                <input id="newDeviceMac" type="text" placeholder="MAC Address" required>
+                <input id="newDeviceBroadcast" type="text" placeholder="Broadcast Address" value="255.255.255.255" required>
+                <div class="modal-actions">
+                    <button id="submitAddDevice" type="submit">Add</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="snackbar" class="snackbar" role="status" aria-live="polite"></div>
 </body>
 
 </html>
